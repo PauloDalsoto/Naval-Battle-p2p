@@ -29,7 +29,7 @@ class TcpPeer:
             conn.setblocking(False)
             # get message
             data = conn.recv(1024) if conn else b""
-            print(f"[TcpPeer]Accepted connection from {addr}")
+            print(f"[TcpPeer]Accepted connection from {addr}: {data.decode('utf-8', errors='ignore').strip()}")
 
             return conn, addr, data.decode("utf-8", errors="ignore").strip()
         except BlockingIOError:

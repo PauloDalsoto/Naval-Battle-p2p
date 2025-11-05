@@ -82,6 +82,7 @@ class GameScreen(Screen):
 
         # Estado de seleção de tiro
         self.selected_shot: Optional[Tuple[int, int]] = None
+        self.last_shot = None
 
         # Toggle de tiros aleatórios (auto) + botão de alternância (renderizado na barra inferior)
         self.random_shots_enabled: bool = False
@@ -102,6 +103,7 @@ class GameScreen(Screen):
         self.shots_made = 0
         self.hits_received_count = 0
         self.distinct_players_hit_count = 0
+        self.ships_destroyed_count = 0
 
         # Callback de saída (placeholder)
         self.on_exit_game = on_exit_game
@@ -368,7 +370,7 @@ class GameScreen(Screen):
         score_lines = [
             f"Tiros: {self.shots_made}",
             f"Atingido: {self.hits_received_count}",
-            f"Destruídos: {self.distinct_players_hit_count}",
+            f"Destruídos: {self.ships_destroyed_count}",
         ]
         # Alinhar os textos de score mais à direita mantendo o mesmo espaçamento da borda
         widths = [self.sub_font.render(line, True, theme.COLOR_TEXT).get_width() for line in score_lines]
@@ -382,6 +384,8 @@ class GameScreen(Screen):
 
     # Ação de "atirar" automática a cada 10s
     def execute_shot(self) -> None:
+        self.last_shot = self.selected_shot
+
         # Se não há posição selecionada, escolha aleatória
         if not self.selected_shot:
             self.selected_shot = (random.randint(0, GRID_SIZE - 1), random.randint(0, GRID_SIZE - 1))
@@ -418,8 +422,9 @@ class GameScreen(Screen):
         hits_received = self.hits_received_count
         hits_by_player = dict(self.hits_by_player)
         distinct_players_hit = len([ip for ip, c in hits_by_player.items() if c > 0])
+        destroyed = len([ip for ip, c in self.destroyed_ships_by_player.items() if c > 0])
         final_score = distinct_players_hit - hits_received
-        return hits_received, hits_by_player, distinct_players_hit, final_score
+        return hits_received, hits_by_player, destroyed, final_score
 
     def layout_exit_modal_buttons(self):
         btn_gap = 20
@@ -516,6 +521,7 @@ class GameScreen(Screen):
     def register_outgoing_hit(self, player_ip: str) -> None:
         self.hits_by_player[player_ip] = self.hits_by_player.get(player_ip, 0) + 1
         self.distinct_players_hit_count = len([ip for ip, c in self.hits_by_player.items() if c > 0])
+        self.shot_hits.add(self.last_shot)
 
     def register_outgoing_destroyed(self, player_ip: str) -> None:
         self.destroyed_ships_by_player[player_ip] = self.destroyed_ships_by_player.get(player_ip, 0) + 1

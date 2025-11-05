@@ -101,20 +101,21 @@ class App:
         pygame.quit()
 
     def handle_network(self) -> None:
+        self.players_queue.put(self.udp_peer.get_participants())
+
         conn, addr, msg_tcp = self.tcp_peer.wait_for_connection()
         addr, msg_udp = self.udp_peer.wait_for_message()
 
         if addr and msg_udp:
             self.manager.current.handle_network_event(addr, msg_udp)
-            # Atualiza janela de jogadores quando há mudanças explícitas (Conectando/Saindo)
-            if msg_udp in ("Conectando", "Saindo") and self.players_queue:
-                try:
-                    self.players_queue.put(self.udp_peer.get_participants())
-                except Exception:
-                    pass
-
+             
         if msg_tcp and addr:
-            self.manager.current.handle_network_event(addr, msg_tcp)
+            if msg_tcp.lower().startswith("participantes:"):
+                self.udp_peer.receive_participant_list(msg_tcp)
+                self.players_queue.put(self.udp_peer.get_participants())
+                
+            else:
+                self.manager.current.handle_network_event(addr, msg_tcp)
         
     def handle_ui(self) -> None:
         # Event handling

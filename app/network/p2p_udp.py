@@ -53,16 +53,20 @@ class UdpPeer:
             try:
                 participant_ips = sorted({p.ip for p in self.participants})
                 payload = "participantes: [" + ", ".join(f"'{ip}'" for ip in participant_ips) + "]"
-                if self.tcp_peer:
-                    self.tcp_peer.send_message(ip, 5001, payload)
+                # Reply via UDP unicast to the requester with the participants list
+                self.server.sendto(payload.encode("utf-8"), (ip, self.udp_port))
             except Exception as e:
-                print(f"[UdpPeer] TcpPeer send_message error: {e}")
+                print(f"[UdpPeer] UDP send participants error: {e}")
 
         elif msg == "Saindo":
             for participant in self.participants:
                 if participant.ip == ip:
                     participant.active = False
                     break
+
+        elif ip not in [p.ip for p in self.participants]:
+            self.participants.append(Player(ip, True))
+
         return addr, msg
 
     def _detect_local_ip(self) -> str:
@@ -86,6 +90,7 @@ class UdpPeer:
         self.server.sendto(msg.encode("utf-8"), (self.broadcast_addr, self.udp_port))
 
     def send_shot_unicast(self, message: str) -> None:
+        print(self.participants)
         for participant in self.participants:
             if participant.active:
                 ip = participant.ip
@@ -100,6 +105,37 @@ class UdpPeer:
                 if ip != self.local_ip:
                     print("[UdpPeer] Sending unicast lost message to", ip)
                     self.server.sendto(message.encode("utf-8"), (ip, self.udp_port))
+
+    def receive_participant_list(self, msg: str) -> None:
+        """
+        Processa uma mensagem UDP com a lista de participantes no formato:
+        "participantes: ['ip1', 'ip2', ...]".
+        Atualiza self.participants adicionando IPs novos e reativando existentes.
+        """
+        try:
+            payload = msg.split(":", 1)[1]
+            start = payload.find("[")
+            end = payload.find("]")
+            if start != -1 and end != -1 and end > start:
+                inner = payload[start + 1:end]
+                ips = []
+                for part in inner.split(","):
+                    ip = part.strip().strip("'").strip('"')
+                    if ip:
+                        ips.append(ip)
+                known = {p.ip for p in self.participants}
+                for ip in ips:
+                    if ip == self.local_ip:
+                        continue
+                    if ip in known:
+                        for p in self.participants:
+                            if p.ip == ip:
+                                p.active = True
+                                break
+                    else:
+                        self.participants.append(Player(ip, True))
+        except Exception as e:
+            print(f"[UdpPeer] receive_participant_list parse error: {e}")
 
     def get_participants(self) -> list:
         return self.participants
