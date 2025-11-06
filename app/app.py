@@ -89,8 +89,7 @@ class App:
        
     def get_players_count(self) -> int:
         participants = self.udp_peer.get_participants()
-        return len(participants) + 1 
-        return 3
+        return len(participants)
 
     def run(self) -> None:
         while self.running:

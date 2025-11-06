@@ -478,7 +478,7 @@ class GameScreen(Screen):
 
         # Score final (destaque)
         y += 8
-        score_text = self.list_font.render(f"Score Final: {final_score}  (Jogadores atingidos: {distinct_players_hit} - Atingido: {hits_received})", True, theme.COLOR_TITLE)
+        score_text = self.list_font.render(f"Score Final: {final_score}  (Jogadores atingidos: {self.distinct_players_hit_count} - Atingido: {hits_received})", True, theme.COLOR_TITLE)
         surface.blit(score_text, (rect.x + 20, y))
         y += line_gap + 6
 

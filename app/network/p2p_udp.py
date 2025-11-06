@@ -91,7 +91,6 @@ class UdpPeer:
         self.server.sendto(msg.encode("utf-8"), (self.broadcast_addr, self.udp_port))
 
     def send_shot_unicast(self, message: str) -> None:
-        print(self.participants)
         for participant in self.participants:
             if participant.active:
                 ip = participant.ip
@@ -108,11 +107,6 @@ class UdpPeer:
                     self.server.sendto(message.encode("utf-8"), (ip, self.udp_port))
 
     def receive_participant_list(self, msg: str) -> None:
-        """
-        Processa uma mensagem UDP com a lista de participantes no formato:
-        "participantes: ['ip1', 'ip2', ...]".
-        Atualiza self.participants adicionando IPs novos e reativando existentes.
-        """
         try:
             payload = msg.split(":", 1)[1]
             start = payload.find("[")

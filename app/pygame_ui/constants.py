@@ -9,8 +9,8 @@ ORIENT_V = "V"
 EMPTY = 0
 
 # UI default dimensions
-WINDOW_WIDTH = 1040
-WINDOW_HEIGHT = 760
+WINDOW_WIDTH = 940
+WINDOW_HEIGHT = 660
 
 # Margins and sizes
 MARGIN = 20
