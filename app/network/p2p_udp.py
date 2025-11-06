@@ -2,9 +2,10 @@ import socket
 import select
 import time
 from app.naval_battle.player_model import Player
+# 192.168.15.255
 
 class UdpPeer:
-    def __init__(self, udp_port: int = 5000, broadcast_addr: str = "192.168.15.255", tcp_peer=None) -> None:
+    def __init__(self, udp_port: int = 5000, broadcast_addr: str = "255.255.255.255", tcp_peer=None) -> None:
         self.server = None
         self.udp_port = udp_port
         self.broadcast_addr = broadcast_addr
